@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="番茄工作法计时器：专注 25 分钟，休息 5 分钟，简单高效。" />
+  <title>番茄钟 · Pomodoro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app-header">
+      <h1>🍅 番茄钟</h1>
+      <p class="subtitle">专注一轮，休息片刻</p>
+    </header>
+
+    <nav class="modes" role="tablist" aria-label="计时模式">
+      <button class="mode is-active" data-mode="work" role="tab" aria-selected="true">专注</button>
+      <button class="mode" data-mode="short" role="tab" aria-selected="false">短休息</button>
+      <button class="mode" data-mode="long" role="tab" aria-selected="false">长休息</button>
+    </nav>
+
+    <div class="timer-wrap">
+      <svg class="ring" viewBox="0 0 260 260" aria-hidden="true">
+        <circle class="ring-track" cx="130" cy="130" r="120"></circle>
+        <circle class="ring-progress" cx="130" cy="130" r="120"></circle>
+      </svg>
+      <div class="timer-text">
+        <div class="time" id="time" aria-live="polite">25:00</div>
+        <div class="phase" id="phase">保持专注</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="startPause">开始</button>
+      <button class="btn btn-ghost" id="reset" title="重置当前计时">重置</button>
+      <button class="btn btn-ghost" id="skip" title="跳到下一阶段">跳过</button>
+    </div>
+
+    <div class="dots" id="dots" aria-label="今日完成的番茄"></div>
+    <p class="counter" id="counter">今日已完成 0 个番茄</p>
+
+    <details class="settings">
+      <summary>⚙️ 设置时长（分钟）</summary>
+      <div class="settings-grid">
+        <label>专注 <input type="number" id="setWork" min="1" max="120" value="25" /></label>
+        <label>短休息 <input type="number" id="setShort" min="1" max="60" value="5" /></label>
+        <label>长休息 <input type="number" id="setLong" min="1" max="90" value="15" /></label>
+      </div>
+    </details>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

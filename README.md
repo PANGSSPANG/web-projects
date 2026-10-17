@@ -10,9 +10,4 @@
 ## 如何使用
 每个项目直接用浏览器打开其中的 `index.html` 即可运行。
 
-## 发布到网页
-每个项目都是一个独立文件夹，整体上传到任意静态托管即可：
 
-- **GitHub Pages**：把项目文件夹推到 GitHub 仓库，在 Settings → Pages 里选择分支即可
-- **Vercel / Netlify**：拖拽文件夹上传即可
-- **Cloudflare Pages**：连接仓库或直接上传

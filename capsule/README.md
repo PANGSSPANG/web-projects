@@ -2,14 +2,11 @@
 
 打开就随机甩给你一样东西（笑话 / 外语 / 知识点 / 书介绍），点一下换一个，专治无聊。内容由 DeepSeek 实时生成。
 
-## 运行
+这是一个纯静态网页：单个 `index.html` 文件，无需安装依赖、无需构建，直接用浏览器打开即可使用。
 
-```bash
-npm install
-npm run dev
-```
+## 使用
 
-浏览器打开 http://localhost:5173
+直接双击打开 `index.html`，或者用任意静态服务器托管（例如 `npx serve .`、`python -m http.server`）。
 
 ## 设置 API key
 

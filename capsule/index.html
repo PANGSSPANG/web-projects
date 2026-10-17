@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>扭蛋</title>
+    <style>
+      :root {
+        --bg: #f8f6f2;
+        --ink: #201d1a;
+        --ink-soft: #4a443c;
+        --muted: #8f877a;
+        --card-bg: #ffffff;
+        --border: #ece7df;
+        --shadow: 0 24px 60px -32px rgba(32, 29, 26, 0.28);
+        --radius: 24px;
+        --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+          system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      .page {
+        position: relative;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      /* ---- 顶栏 ---- */
+      .topbar {
+        width: 100%;
+        max-width: 720px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 28px 24px 0;
+      }
+
+      .brand {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .gear {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        transition: color 160ms, background 160ms;
+      }
+
+      .gear:hover {
+        color: var(--ink);
+        background: var(--card-bg);
+      }
+
+      /* ---- 舞台与卡片 ---- */
+      .stage {
+        flex: 1;
+        width: 100%;
+        max-width: 720px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .card {
+        position: relative;
+        width: 100%;
+        max-width: 560px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 44px 40px;
+        animation: pop-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--tint);
+        padding: 6px 12px;
+        border-radius: 999px;
+      }
+
+      .tag::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      .tag em {
+        font-style: normal;
+        font-weight: 500;
+        opacity: 0.7;
+      }
+
+      .card-body {
+        margin-top: 24px;
+      }
+
+      .body-joke {
+        margin: 0;
+        font-size: 26px;
+        line-height: 1.65;
+        color: var(--ink);
+      }
+
+      .body-foreign {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.5;
+        font-weight: 500;
+        color: var(--ink);
+      }
+
+      .translation {
+        margin: 14px 0 0;
+        font-size: 18px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .lang-tag {
+        margin: 16px 0 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      .body-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: var(--ink);
+      }
+
+      .body-author {
+        margin: 10px 0 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      .body-text {
+        margin: 18px 0 0;
+        font-size: 18px;
+        line-height: 1.7;
+        color: var(--ink-soft);
+      }
+
+      .body-reco {
+        margin: 22px 0 0;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+      }
+
+      .body-reco::before {
+        content: "推荐理由";
+        margin-right: 8px;
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      /* ---- 加载遮罩 ---- */
+      .veil {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(248, 246, 242, 0.55);
+        border-radius: var(--radius);
+        backdrop-filter: blur(2px);
+      }
+
+      .veil-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 3px solid var(--accent, #cfc8bb);
+        border-top-color: transparent;
+        animation: spin 0.7s linear infinite;
+      }
+
+      .loading-label {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      /* ---- 首次加载（无卡片） ---- */
+      .boot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .boot-hint {
+        font-size: 16px;
+        color: var(--muted);
+      }
+
+      /* ---- 错误与提示 ---- */
+      .error {
+        position: fixed;
+        left: 50%;
+        bottom: 84px;
+        transform: translateX(-50%);
+        margin: 0;
+        padding: 10px 16px;
+        font-size: 14px;
+        color: #b0423a;
+        background: #fbe9e7;
+        border: 1px solid #f2c9c4;
+        border-radius: 12px;
+        max-width: 90vw;
+      }
+
+      .hint {
+        padding: 0 24px 28px;
+        margin: 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      /* ---- 设置弹窗 ---- */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(32, 29, 26, 0.35);
+        padding: 24px;
+        z-index: 10;
+      }
+
+      .modal {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 28px 26px;
+        box-shadow: var(--shadow);
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 30px;
+        height: 30px;
+        border: none;
+        background: transparent;
+        font-size: 22px;
+        line-height: 1;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .modal-title {
+        margin: 0 0 12px;
+        font-size: 19px;
+        font-weight: 700;
+      }
+
+      .modal-hint {
+        margin: 0 0 16px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+      }
+
+      .modal-hint a {
+        display: inline-block;
+        margin-top: 4px;
+        color: var(--accent, #3b6fd4);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .modal-input {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 15px;
+        font-family: var(--sans);
+        color: var(--ink);
+        background: #fbfaf8;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        outline: none;
+      }
+
+      .modal-input:focus {
+        border-color: var(--accent, #3b6fd4);
+      }
+
+      .btn-primary {
+        width: 100%;
+        margin-top: 14px;
+        padding: 12px 16px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: var(--sans);
+        color: #fff;
+        background: #201d1a;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      .btn-primary:disabled {
+        background: #cfc8bb;
+        cursor: not-allowed;
+      }
+
+      /* ---- 动画 ---- */
+      @keyframes pop-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.99);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card {
+          animation: none;
+        }
+        .spinner {
+          animation: none;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .card {
+          padding: 32px 24px;
+        }
+        .body-joke {
+          font-size: 22px;
+        }
+        .body-foreign {
+          font-size: 24px;
+        }
+        .body-title {
+          font-size: 21px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="page">
+      <header class="topbar">
+        <span class="brand">扭蛋</span>
+        <button class="gear" id="gear" aria-label="设置">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+      </header>
+
+      <main class="stage" id="stage"></main>
+
+      <p class="error" id="error" hidden></p>
+
+      <footer class="hint">点一下，扭一个</footer>
+
+      <div class="overlay" id="overlay" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-label="设置 API key">
+          <button class="modal-close" id="modal-close" aria-label="关闭">×</button>
+          <h2 class="modal-title">设置 API key</h2>
+          <p class="modal-hint">
+            内容由 DeepSeek 生成，需要一个 API key。它只保存在你本机浏览器里，不会上传。
+            <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer">去获取 →</a>
+          </p>
+          <input class="modal-input" id="api-key-input" type="password" placeholder="sk-..." />
+          <button class="btn-primary" id="save-btn">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        'use strict'
+
+        var STORAGE_KEY = 'capsule.apiKey'
+        var API_URL = 'https://api.deepseek.com/chat/completions'
+        var MODEL = 'deepseek-chat'
+
+        var CATEGORIES = [
+          { id: 'joke', label: '笑话', labelEn: 'joke', color: '#e07a2f', tint: '#f9e9d8' },
+          { id: 'foreign', label: '外语', labelEn: 'phrase', color: '#3b6fd4', tint: '#e3ebfa' },
+          { id: 'knowledge', label: '知识点', labelEn: 'fact', color: '#2e9e6b', tint: '#e0f2e8' },
+          { id: 'book', label: '书', labelEn: 'book', color: '#7a5cc7', tint: '#eae4f8' },
+        ]
+
+        // 每个分类一份提示词，强制输出 JSON，并加防编造约束。
+        var PROMPTS = {
+          joke: [
+            '你是一个讲中文短笑话的助手。',
+            '生成一个原创、干净、简短的笑话，两三句以内，纯文字，不要标题、不要解释。',
+            '只输出 json，格式：{"content":"笑话正文"}',
+          ].join(' '),
+          foreign: [
+            '你是一个语言学习助手。',
+            '随机选一种常见外语（英语、日语、法语、西班牙语、德语、韩语等），给一句日常实用的句子。',
+            '语法必须正确，附中文翻译，并标出语种的中文名。',
+            '只输出 json，格式：{"language":"语种中文名","original":"外文原句","translation":"中文翻译"}',
+          ].join(' '),
+          knowledge: [
+            '你是一个科普助手，给一个常识级、可验证的知识点。',
+            '必须是公认事实，不要冷门数据，不要编造统计数字，不要有争议的观点。',
+            '只输出 json，格式：{"title":"一句话标题","explanation":"两三句解释"}',
+          ].join(' '),
+          book: [
+            '你是一个图书推荐助手，推荐一本真实存在、广为人知的经典书籍。',
+            '书名和作者必须真实准确，严禁虚构；简介真实客观。',
+            '只输出 json，格式：{"title":"书名","author":"作者","summary":"两三句简介","recommendation":"一句推荐理由"}',
+          ].join(' '),
+        }
+
+        // ---- state ----
+        var storedKey = localStorage.getItem(STORAGE_KEY) || ''
+        var state = {
+          apiKey: storedKey,
+          content: null,
+          category: null,
+          loading: storedKey !== '',
+          error: null,
+          showSettings: storedKey === '',
+          pending: false,
+          drawId: 0,
+        }
+
+        // ---- DOM ----
+        var page = document.getElementById('page')
+        var stage = document.getElementById('stage')
+        var errorEl = document.getElementById('error')
+        var overlay = document.getElementById('overlay')
+        var modalInput = document.getElementById('api-key-input')
+        var saveBtn = document.getElementById('save-btn')
+
+        // ---- helpers ----
+        function esc(s) {
+          return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+        }
+
+        function randomCategory(excludeId) {
+          var pool = excludeId ? CATEGORIES.filter(function (c) { return c.id !== excludeId }) : CATEGORIES
+          return pool[Math.floor(Math.random() * pool.length)]
+        }
+
+        function parseJson(text) {
+          try { return JSON.parse(text) } catch (e) { /* fallthrough */ }
+          var fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
+          if (fenced) {
+            try { return JSON.parse(fenced[1]) } catch (e) { /* fallthrough */ }
+          }
+          var start = text.indexOf('{')
+          var end = text.lastIndexOf('}')
+          if (start !== -1 && end > start) {
+            try { return JSON.parse(text.slice(start, end + 1)) } catch (e) { /* fallthrough */ }
+          }
+          throw new Error('无法解析模型返回的内容')
+        }
+
+        async function generateContent(category, apiKey) {
+          var res = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + apiKey,
+            },
+            body: JSON.stringify({
+              model: MODEL,
+              messages: [{ role: 'user', content: PROMPTS[category.id] }],
+              temperature: 1.1,
+              response_format: { type: 'json_object' },
+            }),
+          })
+
+          if (!res.ok) {
+            if (res.status === 401) throw new Error('API key 无效，点右上角重新设置')
+            if (res.status === 429) throw new Error('请求太频繁或余额不足')
+            if (res.status >= 500) throw new Error('服务暂时不可用，稍后再试')
+            throw new Error('请求失败（' + res.status + '）')
+          }
+
+          var data = await res.json()
+          var raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || ''
+          var parsed = parseJson(raw)
+          return Object.assign({ kind: category.id }, parsed)
+        }
+
+        // ---- render ----
+        function renderBody(content) {
+          switch (content.kind) {
+            case 'joke':
+              return '<p class="body-joke">' + esc(content.content) + '</p>'
+            case 'foreign':
+              return '<p class="body-foreign">' + esc(content.original) + '</p>' +
+                '<p class="translation">' + esc(content.translation) + '</p>' +
+                '<p class="lang-tag">' + esc(content.language) + '</p>'
+            case 'knowledge':
+              return '<h2 class="body-title">' + esc(content.title) + '</h2>' +
+                '<p class="body-text">' + esc(content.explanation) + '</p>'
+            case 'book':
+              return '<h2 class="body-title">' + esc(content.title) + '</h2>' +
+                '<p class="body-author">' + esc(content.author) + '</p>' +
+                '<p class="body-text">' + esc(content.summary) + '</p>' +
+                '<p class="body-reco">' + esc(content.recommendation) + '</p>'
+            default:
+              return ''
+          }
+        }
+
+        function renderCard() {
+          if (state.content && state.category) {
+            var c = state.category
+            stage.innerHTML =
+              '<article class="card" style="--accent:' + c.color + ';--tint:' + c.tint + '">' +
+                '<span class="tag">' + esc(c.label) + '<em>' + esc(c.labelEn) + '</em></span>' +
+                '<div class="card-body">' + renderBody(state.content) + '</div>' +
+                '<div class="veil" id="veil"><div class="veil-inner">' +
+                  '<div class="spinner"></div>' +
+                  '<div class="loading-label">扭蛋中…</div>' +
+                '</div></div>' +
+              '</article>'
+          } else if (state.loading) {
+            stage.innerHTML =
+              '<div class="boot"><div class="spinner"></div><div class="loading-label">扭蛋中…</div></div>'
+          } else {
+            stage.innerHTML = '<div class="boot boot-hint">点一下，扭一个</div>'
+          }
+          syncVeil()
+        }
+
+        function syncVeil() {
+          var veil = document.getElementById('veil')
+          if (veil) veil.style.display = state.loading ? 'grid' : 'none'
+        }
+
+        function renderError() {
+          if (state.error) {
+            errorEl.textContent = state.error
+            errorEl.hidden = false
+          } else {
+            errorEl.hidden = true
+          }
+        }
+
+        function syncModal() {
+          overlay.hidden = !state.showSettings
+          if (state.showSettings) {
+            modalInput.value = state.apiKey
+            modalInput.focus()
+            saveBtn.disabled = !modalInput.value.trim()
+          }
+        }
+
+        function render() {
+          renderCard()
+          renderError()
+          syncModal()
+        }
+
+        // ---- actions ----
+        async function draw() {
+          if (!state.apiKey || state.pending) return
+          state.pending = true
+          var cat = randomCategory(state.category && state.category.id)
+          var changed = false
+          try {
+            var result = await generateContent(cat, state.apiKey)
+            state.category = cat
+            state.content = result
+            state.drawId++
+            changed = true
+          } catch (e) {
+            state.error = e instanceof Error ? e.message : '生成失败，请重试'
+          } finally {
+            state.loading = false
+            state.pending = false
+          }
+          if (changed) {
+            renderCard()
+          } else {
+            syncVeil()
+          }
+          renderError()
+        }
+
+        function handlePageClick() {
+          if (state.loading || state.showSettings || !state.apiKey) return
+          state.loading = true
+          state.error = null
+          renderError()
+          syncVeil()
+          draw()
+        }
+
+        function handleSaveKey(key) {
+          localStorage.setItem(STORAGE_KEY, key)
+          state.apiKey = key
+          state.showSettings = false
+          state.content = null
+          state.category = null
+          state.error = null
+          state.loading = true
+          syncModal()
+          renderError()
+          renderCard()
+          draw()
+        }
+
+        function openSettings() {
+          state.showSettings = true
+          syncModal()
+        }
+
+        function closeSettings() {
+          state.showSettings = false
+          syncModal()
+        }
+
+        function saveFromInput() {
+          var v = modalInput.value.trim()
+          if (v) handleSaveKey(v)
+        }
+
+        // ---- wire events ----
+        page.addEventListener('click', handlePageClick)
+
+        document.getElementById('gear').addEventListener('click', function (e) {
+          e.stopPropagation()
+          openSettings()
+        })
+
+        overlay.addEventListener('click', function (e) {
+          e.stopPropagation()
+          if (e.target === overlay) closeSettings()
+        })
+
+        document.getElementById('modal-close').addEventListener('click', function (e) {
+          e.stopPropagation()
+          closeSettings()
+        })
+
+        modalInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') saveFromInput()
+        })
+
+        modalInput.addEventListener('input', function () {
+          saveBtn.disabled = !modalInput.value.trim()
+        })
+
+        saveBtn.addEventListener('click', function (e) {
+          e.stopPropagation()
+          saveFromInput()
+        })
+
+        // ---- init ----
+        render()
+        if (state.apiKey && !state.content) draw()
+      })()
+    </script>
+  </body>
+</html>

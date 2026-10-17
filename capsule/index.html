@@ -428,9 +428,9 @@
       <div class="overlay" id="overlay" hidden>
         <div class="modal" role="dialog" aria-modal="true" aria-label="设置 API key">
           <button class="modal-close" id="modal-close" aria-label="关闭">×</button>
-          <h2 class="modal-title">设置 API key</h2>
+          <h2 class="modal-title">设置 API key（可选）</h2>
           <p class="modal-hint">
-            内容由 DeepSeek 生成，需要一个 API key。它只保存在你本机浏览器里，不会上传。
+            API key 可选：填了就用 DeepSeek 实时生成，不填也能用内置内容库。key 只保存在你本机浏览器里，不会上传。
             <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer">去获取 →</a>
           </p>
           <input class="modal-input" id="api-key-input" type="password" placeholder="sk-..." />
@@ -479,6 +479,54 @@
           ].join(' '),
         }
 
+        // 内置内容库：未配置 API key 时使用，保证离线也能扭。
+        var BUILTIN = {
+          joke: [
+            { content: '面试官问我有什么特长，我说我特别能拖延。他说那你下周再来吧——我到现在还没去。' },
+            { content: '医生说我缺乏运动，于是我办了张健身卡。后来发现，刷卡也算一种运动。' },
+            { content: '我把闹钟设成早上六点，这样我就能每天在七点醒来，亲手把它关掉。' },
+            { content: '我妈说我房间乱得像被抢劫过。我反驳说，抢劫犯看了都会留张字条：「无从下手」。' },
+            { content: '我跟朋友说要减肥，朋友说别开玩笑。我说我是认真的——从明天开始，这个明天已经持续了三年。' },
+            { content: '朋友问我最近在忙什么，我说在学做饭。他问做得好吃吗，我说至少烟雾报警器每次都给我打满分。' },
+            { content: '我去健身房，教练问我目标是什么。我说想练到能徒手开罐头。教练沉默很久，递给我一个开罐器。' },
+            { content: '为什么程序员分不清万圣节和圣诞节？因为 10 月 31 日（OCT 31）和 12 月 25 日（DEC 25）在八进制里相等。' },
+          ],
+          foreign: [
+            { language: '英语', original: 'The early bird catches the worm.', translation: '早起的鸟儿有虫吃。' },
+            { language: '英语', original: 'Practice makes perfect.', translation: '熟能生巧。' },
+            { language: '日语', original: 'お疲れ様です。', translation: '辛苦了。' },
+            { language: '日语', original: '一期一会。', translation: '一生一次，珍惜当下。' },
+            { language: '法语', original: 'Bon appétit !', translation: '用餐愉快！' },
+            { language: '西班牙语', original: 'Buenos días.', translation: '早上好。' },
+            { language: '德语', original: 'Ich liebe dich.', translation: '我爱你。' },
+            { language: '韩语', original: '감사합니다.', translation: '谢谢。' },
+          ],
+          knowledge: [
+            { title: '蜜蜂靠「8 字舞」报信', explanation: '蜜蜂回巢后会跳一种 8 字形舞蹈，用方向和摆动次数告诉同伴花蜜的方向与距离。' },
+            { title: '海拔越高，水的沸点越低', explanation: '标准大气压下水的沸点是 100°C；气压随海拔升高而下降，所以高原上水不到 100°C 就沸腾了。' },
+            { title: '光速是宇宙的速度上限', explanation: '光在真空中每秒约走 30 万公里，任何信息或物质的传播速度都无法超过它。' },
+            { title: '木星是太阳系最大的行星', explanation: '木星的体积能装下约 1300 个地球，质量比其他所有行星加起来还大两倍多。' },
+            { title: '彩虹是阳光被水滴分解出来的', explanation: '阳光进入水滴后发生折射和反射，被分解成七种颜色，于是形成了彩虹。' },
+            { title: '地球表面约七成是海洋', explanation: '海洋覆盖了地球约 71% 的表面，但海水含盐分，不能直接饮用。' },
+            { title: '声音在水中比空气里传得快', explanation: '声音在空气中的速度约为每秒 340 米，而在水中可达到约 1500 米/秒。' },
+            { title: '巧克力对猫狗有毒', explanation: '猫狗无法有效代谢巧克力里的可可碱，误食可能引起中毒甚至危及生命。' },
+            { title: '金星是太阳系最热的行星', explanation: '虽然水星离太阳更近，但金星浓厚的二氧化碳大气造成强烈温室效应，表面温度超过 460°C。' },
+            { title: '章鱼有三个心脏', explanation: '章鱼有两个鳃心负责把血液送到鳃部，一个体心负责把血泵向全身。' },
+            { title: '人类每天分泌大量唾液', explanation: '一个成年人每天大约分泌 1 到 1.5 升唾液，用来湿润口腔和帮助消化。' },
+            { title: '竹子是生长最快的植物之一', explanation: '某些竹子一天能长高几十厘米，是世界上生长最快的植物之一。' },
+          ],
+          book: [
+            { title: '小王子', author: '安托万·德·圣-埃克苏佩里', summary: '一个来自小行星的男孩在各星球间的旅行见闻，用童话的方式讲述爱、孤独与责任。', recommendation: '篇幅短小却常读常新，适合想从故事里找回纯真的你。' },
+            { title: '活着', author: '余华', summary: '主人公福贵历经家道中落与时代动荡，在一次次失去中依然坚韧地活下去。', recommendation: '沉重却充满力量，让你重新理解「活着」本身的分量。' },
+            { title: '百年孤独', author: '加西亚·马尔克斯', summary: '布恩迪亚家族七代人的兴衰，魔幻现实主义笔法写尽一个家族的宿命与孤独。', recommendation: '魔幻与现实交织的巅峰之作，适合喜欢宏大叙事的读者。' },
+            { title: '三体', author: '刘慈欣', summary: '人类与三体文明跨越光年的博弈，从文革时期一直延伸到宇宙尺度的文明兴亡。', recommendation: '硬科幻天花板，脑洞与格局兼具，看完会忍不住仰望星空。' },
+            { title: '红楼梦', author: '曹雪芹', summary: '以贾府兴衰为背景，书写宝黛爱情与一群女子的命运，是中国古典小说的巅峰。', recommendation: '人物与细节极尽精妙，值得反复品读的传世经典。' },
+            { title: '1984', author: '乔治·奥威尔', summary: '在极权统治的「大洋国」里，主人公温斯顿试图反抗无处不在的监视与思想控制。', recommendation: '反乌托邦经典，对权力与自由的警示至今仍振聋发聩。' },
+            { title: '人类简史', author: '尤瓦尔·赫拉利', summary: '从认知革命、农业革命到科学革命，梳理智人如何一步步成为地球的主宰。', recommendation: '用清晰的大框架串起人类历史，适合想快速建立世界观的读者。' },
+            { title: '围城', author: '钱锺书', summary: '以留学归来的方鸿渐为主线，用幽默犀利的笔触写尽婚姻、事业与人情的围城。', recommendation: '妙语连珠、金句频出，读起来轻松又耐人寻味。' },
+          ],
+        }
+
         // ---- state ----
         var storedKey = localStorage.getItem(STORAGE_KEY) || ''
         var state = {
@@ -487,7 +535,7 @@
           category: null,
           loading: storedKey !== '',
           error: null,
-          showSettings: storedKey === '',
+          showSettings: false,
           pending: false,
           drawId: 0,
         }
@@ -527,6 +575,20 @@
             try { return JSON.parse(text.slice(start, end + 1)) } catch (e) { /* fallthrough */ }
           }
           throw new Error('无法解析模型返回的内容')
+        }
+
+        // 从内置内容库里随机取一条，避免与上一条重复。
+        var lastBuiltin = {}
+
+        function pickBuiltin(category) {
+          var pool = BUILTIN[category.id] || []
+          if (pool.length === 0) throw new Error('暂无内容')
+          var idx = Math.floor(Math.random() * pool.length)
+          if (pool.length > 1 && idx === lastBuiltin[category.id]) {
+            idx = (idx + 1) % pool.length
+          }
+          lastBuiltin[category.id] = idx
+          return Object.assign({ kind: category.id }, pool[idx])
         }
 
         async function generateContent(category, apiKey) {
@@ -631,12 +693,14 @@
 
         // ---- actions ----
         async function draw() {
-          if (!state.apiKey || state.pending) return
+          if (state.pending) return
           state.pending = true
           var cat = randomCategory(state.category && state.category.id)
           var changed = false
           try {
-            var result = await generateContent(cat, state.apiKey)
+            var result = state.apiKey
+              ? await generateContent(cat, state.apiKey)
+              : pickBuiltin(cat)
             state.category = cat
             state.content = result
             state.drawId++
@@ -656,7 +720,7 @@
         }
 
         function handlePageClick() {
-          if (state.loading || state.showSettings || !state.apiKey) return
+          if (state.loading || state.showSettings) return
           state.loading = true
           state.error = null
           renderError()
@@ -726,7 +790,7 @@
 
         // ---- init ----
         render()
-        if (state.apiKey && !state.content) draw()
+        draw()
       })()
     </script>
   </body>
